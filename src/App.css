@@ -1,5 +1,8 @@
+@import url(https://fonts.googleapis.com/css?family=Sono);
 .App {
   text-align: center;
+  font-family: "Sono", sans-serif;
+
 }
 
 .App-logo {
@@ -14,13 +17,13 @@
 }
 
 .App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+background-color: black;
+  min-height: 25vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
+  font-size: 15px;
   color: white;
 }
 
