@@ -1,10 +1,10 @@
 import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Sun, Moon } from 'lucide-react';
+import { LogOut, Sun, Moon, MessageSquare } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 
-export default function Header() {
+export default function Header({ onOpenFeedback }) {
   const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
@@ -31,6 +31,16 @@ export default function Header() {
           >
             {theme === 'dark' ? <Sun size={28} /> : <Moon size={28} />}
           </button>
+          {currentUser && typeof onOpenFeedback === 'function' && (
+            <button
+              onClick={onOpenFeedback}
+              className="text-slate-900/90 hover:text-slate-900 dark:text-white/90 dark:hover:text-white transition-colors"
+              aria-label="Send feedback"
+              title="Feedback"
+            >
+              <MessageSquare size={28} />
+            </button>
+          )}
           {currentUser && (
             <button
               onClick={handleLogout}

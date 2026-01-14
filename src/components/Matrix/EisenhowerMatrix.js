@@ -24,6 +24,7 @@ import Quadrant from './Quadrant';
 import TaskCard from './TaskCard';
 import TaskModal from './TaskModal';
 import Header from '../UI/Header';
+import FeedbackModal from '../UI/FeedbackModal';
 import Archive from './Archive';
 import Trash from './Trash';
 import { Plus, Archive as ArchiveIcon, Trash2, ArrowLeft } from 'lucide-react';
@@ -54,6 +55,7 @@ export default function EisenhowerMatrix() {
   const [editingTask, setEditingTask] = useState(null);
   const [defaultQuadrant, setDefaultQuadrant] = useState(null);
   const [activeTab, setActiveTab] = useState('matrix');
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const { currentUser } = useAuth();
 
   const sensors = useSensors(
@@ -280,6 +282,19 @@ export default function EisenhowerMatrix() {
     }
   };
 
+  const handleSubmitFeedback = async ({ message, category }) => {
+    if (!currentUser) return;
+    const feedbackRef = collection(db, 'users', currentUser.uid, 'feedback');
+    await addDoc(feedbackRef, {
+      message,
+      category: category || 'general',
+      createdAt: serverTimestamp(),
+      // Helpful metadata (keep minimal)
+      page: activeTab,
+      userEmail: currentUser.email || null,
+    });
+  };
+
   // Handle drag start
   const handleDragStart = (event) => {
     const { active } = event;
@@ -328,7 +343,7 @@ export default function EisenhowerMatrix() {
 
   return (
     <div className="min-h-screen flex flex-col bg-white text-slate-900 dark:bg-[#1a1a1a] dark:text-white">
-      <Header />
+      <Header onOpenFeedback={() => setIsFeedbackOpen(true)} />
 
       {activeTab !== 'matrix' && (
         <button
@@ -500,6 +515,13 @@ export default function EisenhowerMatrix() {
           </div>
         )}
       </div>
+
+      <FeedbackModal
+        isOpen={isFeedbackOpen}
+        onClose={() => setIsFeedbackOpen(false)}
+        onSubmit={handleSubmitFeedback}
+        userEmail={currentUser?.email}
+      />
     </div>
   );
 }
