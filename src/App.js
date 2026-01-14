@@ -1,24 +1,33 @@
-import './App.css';
 import React from 'react';
-import './App.css';
-import EisenhowerMatrix from './EisenhowerMatrix'; 
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { Login, Signup, PrivateRoute } from './components/Auth';
+import { EisenhowerMatrix } from './components/Matrix';
+import './styles/index.css';
+
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1>Eisenhower Matrix</h1>
-      </header>
-      <main>
-        <EisenhowerMatrix />
-      </main>
-      <footer>
-        <h3>About this</h3>
-        <p>The Eisenhower Matrix is a simple tool for considering the long-term outcomes of your daily tasks and focusing on what will make you most effective, not just most productive.
-          It helps you visualize all your tasks in a matrix of urgent/important.</p>
-      </footer>
-    </div>
+    <Router>
+      <AuthProvider>
+        <ThemeProvider>
+          <Routes>
+            <Route 
+              path="/" 
+              element={
+                <PrivateRoute>
+                  <EisenhowerMatrix />
+                </PrivateRoute>
+              } 
+            />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </ThemeProvider>
+      </AuthProvider>
+    </Router>
   );
 }
 
 export default App;
-
