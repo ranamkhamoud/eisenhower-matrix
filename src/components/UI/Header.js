@@ -22,33 +22,33 @@ export default function Header({ onOpenFeedback }) {
     <header className="fixed top-0 left-0 right-0 z-50 p-6 pointer-events-none">
       <div className="flex items-start justify-between">
         <div />
-        <div className="flex items-center gap-4 pointer-events-auto">
+        <div className="flex items-center gap-3 sm:gap-4 pointer-events-auto">
           <button
             onClick={toggleTheme}
-            className="text-slate-900/90 hover:text-slate-900 dark:text-white/90 dark:hover:text-white transition-colors"
+            className="text-slate-900/90 hover:text-slate-900 dark:text-white/90 dark:hover:text-white transition-all hover:scale-110 active:scale-95"
             aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
           >
-            {theme === 'dark' ? <Sun size={28} /> : <Moon size={28} />}
+            {theme === 'dark' ? <Sun className="w-6 h-6 sm:w-7 sm:h-7" /> : <Moon className="w-6 h-6 sm:w-7 sm:h-7" />}
           </button>
           {currentUser && typeof onOpenFeedback === 'function' && (
             <button
               onClick={onOpenFeedback}
-              className="text-slate-900/90 hover:text-slate-900 dark:text-white/90 dark:hover:text-white transition-colors"
+              className="text-slate-900/90 hover:text-slate-900 dark:text-white/90 dark:hover:text-white transition-all hover:scale-110 active:scale-95"
               aria-label="Send feedback"
               title="Feedback"
             >
-              <MessageSquare size={28} />
+              <MessageSquare className="w-6 h-6 sm:w-7 sm:h-7" />
             </button>
           )}
           {currentUser && (
             <button
               onClick={handleLogout}
-              className="text-slate-900/90 hover:text-slate-900 dark:text-white/90 dark:hover:text-white transition-colors"
+              className="text-slate-900/90 hover:text-slate-900 dark:text-white/90 dark:hover:text-white transition-all hover:scale-110 active:scale-95"
               aria-label="Sign out"
               title="Sign out"
             >
-              <LogOut size={28} />
+              <LogOut className="w-6 h-6 sm:w-7 sm:h-7" />
             </button>
           )}
         </div>

@@ -348,11 +348,11 @@ export default function EisenhowerMatrix() {
       {activeTab !== 'matrix' && (
         <button
           onClick={() => setActiveTab('matrix')}
-          className="fixed top-6 left-6 z-50 text-slate-900/90 hover:text-slate-900 dark:text-white/90 dark:hover:text-white transition-colors"
+          className="fixed top-6 left-6 z-50 text-slate-900/90 hover:text-slate-900 dark:text-white/90 dark:hover:text-white transition-all hover:scale-110 active:scale-95"
           aria-label="Back to matrix"
           title="Back"
         >
-          <ArrowLeft size={28} />
+          <ArrowLeft className="w-6 h-6 sm:w-7 sm:h-7" />
         </button>
       )}
       
@@ -472,32 +472,32 @@ export default function EisenhowerMatrix() {
               </DndContext>
 
               {/* Bottom-left navigation icons (Archive / Trash) */}
-              <div className="fixed bottom-6 left-6 z-50 flex items-center gap-6">
+              <div className="fixed bottom-6 left-6 z-50 flex items-center gap-4 sm:gap-6">
                 <button
                   onClick={() => setActiveTab((t) => (t === 'archive' ? 'matrix' : 'archive'))}
-                  className="text-slate-900/90 hover:text-slate-900 dark:text-white/90 dark:hover:text-white transition-colors"
+                  className="text-slate-900/90 hover:text-slate-900 dark:text-white/90 dark:hover:text-white transition-all hover:scale-110 active:scale-95"
                   aria-label="Archive"
                   title="Archive"
                 >
-                  <ArchiveIcon size={28} />
+                  <ArchiveIcon className="w-6 h-6 sm:w-7 sm:h-7" />
                 </button>
                 <button
                   onClick={() => setActiveTab((t) => (t === 'trash' ? 'matrix' : 'trash'))}
-                  className="text-slate-900/90 hover:text-slate-900 dark:text-white/90 dark:hover:text-white transition-colors"
+                  className="text-slate-900/90 hover:text-slate-900 dark:text-white/90 dark:hover:text-white transition-all hover:scale-110 active:scale-95"
                   aria-label="Trash"
                   title="Trash"
                 >
-                  <Trash2 size={28} />
+                  <Trash2 className="w-6 h-6 sm:w-7 sm:h-7" />
                 </button>
               </div>
 
               <button
                 onClick={handleOpenAddModal}
-                className="fixed bottom-6 right-6 z-50 text-slate-900/90 hover:text-slate-900 dark:text-white/90 dark:hover:text-white transition-colors"
+                className="fixed bottom-6 right-6 z-50 text-slate-900/90 hover:text-slate-900 dark:text-white/90 dark:hover:text-white transition-all hover:scale-110 active:scale-95"
                 aria-label="Add task"
                 title="Add task"
               >
-                <Plus size={44} strokeWidth={2.25} />
+                <Plus className="w-10 h-10 sm:w-11 sm:h-11" strokeWidth={2.25} />
               </button>
 
               <TaskModal
