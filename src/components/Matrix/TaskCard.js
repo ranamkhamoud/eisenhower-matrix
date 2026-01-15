@@ -77,50 +77,58 @@ export default function TaskCard({ task, onToggleDone, onEdit, onDelete, onArchi
             {task.title}
           </p>
           {task.description && (
-            <p className="text-xs text-slate-500 dark:text-white/50 mt-0.5 line-clamp-1">
+            <p className="hidden sm:block text-xs text-slate-500 dark:text-white/50 mt-0.5 line-clamp-1">
               {task.description}
             </p>
           )}
         </div>
       </div>
 
-      {/* Meta row */}
-      <div className="flex items-center gap-2 mt-2 pl-6">
-        {task.priority && (
-          <span className={`text-[10px] font-bold uppercase tracking-wide ${priority.color}`}>
-            {priority.label}
-          </span>
-        )}
+      {/* Meta + actions */}
+      <div className="mt-2 pl-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
+        <div className="flex items-center gap-2 flex-wrap min-w-0">
+          {task.priority && (
+            <span className={`text-[10px] font-bold uppercase tracking-wide ${priority.color}`}>
+              {priority.label}
+            </span>
+          )}
 
-        {task.dueDate && (
-          <span className={`inline-flex items-center gap-1 text-[11px] ${isOverdue(task.dueDate) ? 'text-red-500 dark:text-red-400' : 'text-slate-400 dark:text-white/40'}`}>
-            <Calendar className="w-3 h-3" />
-            {formatDate(task.dueDate)}
-          </span>
-        )}
+          {task.dueDate && (
+            <span
+              className={`inline-flex items-center gap-1 text-[11px] ${
+                isOverdue(task.dueDate)
+                  ? 'text-red-500 dark:text-red-400'
+                  : 'text-slate-400 dark:text-white/40'
+              }`}
+            >
+              <Calendar className="w-3 h-3" />
+              {formatDate(task.dueDate)}
+            </span>
+          )}
+        </div>
 
         {/* Actions - visible on hover (desktop) or always (mobile) */}
-        <div className="ml-auto flex gap-0.5 opacity-100 sm:opacity-0 sm:group-hover/card:opacity-100 transition-opacity">
+        <div className="flex flex-nowrap justify-end sm:ml-auto gap-0.5 opacity-100 sm:opacity-0 sm:group-hover/card:opacity-100 transition-opacity">
           <button 
             onClick={(e) => { e.stopPropagation(); onEdit(task); }}
-            className="p-1.5 text-slate-400 hover:text-slate-700 dark:text-white/40 dark:hover:text-white rounded transition-colors"
+            className="p-1.5 sm:p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200/40 dark:text-white/40 dark:hover:text-white dark:hover:bg-white/10 rounded transition-all hover:scale-110 active:scale-95"
             title="Edit"
           >
-            <Pencil className="w-3.5 h-3.5" />
+            <Pencil className="w-3.5 h-3.5 sm:w-3.5 sm:h-3.5" />
           </button>
           <button 
             onClick={(e) => { e.stopPropagation(); onArchive(task.id); }}
-            className="p-1.5 text-slate-400 hover:text-slate-700 dark:text-white/40 dark:hover:text-white rounded transition-colors"
+            className="p-1.5 sm:p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200/40 dark:text-white/40 dark:hover:text-white dark:hover:bg-white/10 rounded transition-all hover:scale-110 active:scale-95"
             title="Archive"
           >
-            <Archive className="w-3.5 h-3.5" />
+            <Archive className="w-3.5 h-3.5 sm:w-3.5 sm:h-3.5" />
           </button>
           <button 
             onClick={(e) => { e.stopPropagation(); onDelete(task.id); }}
-            className="p-1.5 text-slate-400 hover:text-red-500 dark:text-white/40 dark:hover:text-red-400 rounded transition-colors"
+            className="p-1.5 sm:p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-500/10 dark:text-white/40 dark:hover:text-red-400 dark:hover:bg-red-500/10 rounded transition-all hover:scale-110 active:scale-95"
             title="Delete"
           >
-            <Trash2 className="w-3.5 h-3.5" />
+            <Trash2 className="w-3.5 h-3.5 sm:w-3.5 sm:h-3.5" />
           </button>
         </div>
       </div>
