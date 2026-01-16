@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, Key, Copy, RefreshCw, Check, ExternalLink } from 'lucide-react';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { X, Key, Copy, RefreshCw, Check } from 'lucide-react';
+import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../services/firebase';
 
 function generateApiKey() {
@@ -34,8 +34,14 @@ export default function ApiSettingsModal({ isOpen, onClose, userId }) {
       } else {
         // Generate initial API key
         const newKey = generateApiKey();
+        // Store in user settings
         await setDoc(doc(db, 'users', userId, 'settings', 'api'), {
           apiKey: newKey,
+          createdAt: new Date().toISOString(),
+        });
+        // Also store in top-level apiKeys collection for easy lookup
+        await setDoc(doc(db, 'apiKeys', newKey), {
+          userId: userId,
           createdAt: new Date().toISOString(),
         });
         setApiKey(newKey);
@@ -51,9 +57,20 @@ export default function ApiSettingsModal({ isOpen, onClose, userId }) {
     
     setRegenerating(true);
     try {
+      // Delete old API key from apiKeys collection
+      if (apiKey) {
+        await deleteDoc(doc(db, 'apiKeys', apiKey));
+      }
+      
       const newKey = generateApiKey();
+      // Store in user settings
       await setDoc(doc(db, 'users', userId, 'settings', 'api'), {
         apiKey: newKey,
+        createdAt: new Date().toISOString(),
+      });
+      // Also store in top-level apiKeys collection
+      await setDoc(doc(db, 'apiKeys', newKey), {
+        userId: userId,
         createdAt: new Date().toISOString(),
       });
       setApiKey(newKey);
