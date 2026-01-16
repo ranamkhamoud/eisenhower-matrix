@@ -1,8 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Mail, Lock, UserPlus, AlertCircle, Sun, Moon, Github } from 'lucide-react';
+import { Mail, Lock, UserPlus, AlertCircle, Sun, Moon, Github, Check, X } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
+
+const passwordRules = [
+  { id: 'length', label: 'At least 8 characters', test: (p) => p.length >= 8 },
+  { id: 'uppercase', label: 'One uppercase letter', test: (p) => /[A-Z]/.test(p) },
+  { id: 'lowercase', label: 'One lowercase letter', test: (p) => /[a-z]/.test(p) },
+  { id: 'number', label: 'One number', test: (p) => /[0-9]/.test(p) },
+  { id: 'special', label: 'One special character (!@#$%^&*)', test: (p) => /[!@#$%^&*(),.?":{}|<>]/.test(p) },
+];
 
 export default function Signup() {
   const [email, setEmail] = useState('');
@@ -10,9 +18,20 @@ export default function Signup() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showRules, setShowRules] = useState(false);
   const { signup, loginWithGithub } = useAuth();
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
+
+  const ruleResults = useMemo(() => {
+    return passwordRules.map(rule => ({
+      ...rule,
+      passed: rule.test(password)
+    }));
+  }, [password]);
+
+  const allRulesPassed = ruleResults.every(r => r.passed);
+  const passedCount = ruleResults.filter(r => r.passed).length;
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -21,8 +40,8 @@ export default function Signup() {
       return setError('Passwords do not match');
     }
 
-    if (password.length < 6) {
-      return setError('Password must be at least 6 characters');
+    if (!allRulesPassed) {
+      return setError('Password does not meet all requirements');
     }
 
     try {
@@ -102,11 +121,47 @@ export default function Signup() {
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onFocus={() => setShowRules(true)}
                 placeholder="Create a password"
                 required
                 className="flex-1 outline-none text-sm bg-transparent text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-white/40"
               />
             </div>
+            
+            {showRules && password.length > 0 && (
+              <div className="mt-2 p-3 bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 rounded-lg">
+                <div className="flex gap-1 mb-2">
+                  {[...Array(5)].map((_, i) => (
+                    <div
+                      key={i}
+                      className={`h-1 flex-1 rounded-full transition-colors ${
+                        i < passedCount
+                          ? passedCount <= 2
+                            ? 'bg-red-500'
+                            : passedCount <= 4
+                            ? 'bg-amber-500'
+                            : 'bg-green-500'
+                          : 'bg-slate-200 dark:bg-white/10'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <div className="space-y-1">
+                  {ruleResults.map((rule) => (
+                    <div key={rule.id} className="flex items-center gap-2 text-xs">
+                      {rule.passed ? (
+                        <Check size={12} className="text-green-500 flex-shrink-0" />
+                      ) : (
+                        <X size={12} className="text-slate-400 dark:text-white/40 flex-shrink-0" />
+                      )}
+                      <span className={rule.passed ? 'text-green-600 dark:text-green-400' : 'text-slate-500 dark:text-white/50'}>
+                        {rule.label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">

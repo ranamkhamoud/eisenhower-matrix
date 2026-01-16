@@ -29,7 +29,6 @@ export default function FeedbackModal({ isOpen, onClose, onSubmit, userEmail }) 
         category,
       });
       setSent(true);
-      // brief confirmation, then close
       setTimeout(() => onClose(), 700);
     } catch (err) {
       setError('Failed to send feedback. Please try again.');

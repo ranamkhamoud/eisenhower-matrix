@@ -47,14 +47,12 @@ export default function TaskModal({ isOpen, onClose, onSave, task, defaultQuadra
     }
   }, [task, defaultQuadrant, isOpen]);
 
-  // Keyboard shortcuts: Cmd+U for urgent, Cmd+I for important (works even in inputs)
   const handleKeyDown = useCallback((e) => {
     if (e.key === 'Escape') {
       onClose();
       return;
     }
     
-    // Cmd+U for urgent, Cmd+I for important (works anywhere in modal)
     if (e.metaKey || e.ctrlKey) {
       if (e.key === 'u' || e.key === 'U') {
         e.preventDefault();

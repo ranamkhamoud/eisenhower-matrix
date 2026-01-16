@@ -1,6 +1,5 @@
 const admin = require('firebase-admin');
 
-// Initialize Firebase Admin (only once)
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert({
@@ -13,7 +12,6 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 
-// CORS headers
 const headers = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
@@ -21,7 +19,6 @@ const headers = {
   'Content-Type': 'application/json',
 };
 
-// Authenticate API key and return userId
 async function authenticateApiKey(authHeader) {
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return { error: 'Missing or invalid Authorization header. Use: Bearer <your-api-key>', status: 401 };
@@ -34,16 +31,13 @@ async function authenticateApiKey(authHeader) {
   }
 
   try {
-    // Look up API key directly from apiKeys collection
     const keyDoc = await db.collection('apiKeys').doc(apiKey).get();
     
     if (keyDoc.exists) {
       const userId = keyDoc.data().userId;
-      console.log(`API key valid for user ${userId}`);
       return { userId };
     }
 
-    console.log('API key not found in apiKeys collection');
     return { error: 'Invalid API key', status: 401 };
   } catch (error) {
     console.error('Auth error:', error);
@@ -51,14 +45,11 @@ async function authenticateApiKey(authHeader) {
   }
 }
 
-// Main handler
 exports.handler = async (event, context) => {
-  // Handle CORS preflight
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers, body: '' };
   }
 
-  // Authenticate
   const auth = await authenticateApiKey(event.headers.authorization || event.headers.Authorization);
   if (auth.error) {
     return {
@@ -74,7 +65,6 @@ exports.handler = async (event, context) => {
   const method = event.httpMethod;
 
   try {
-    // GET /tasks - List all tasks
     if (method === 'GET' && !taskId) {
       const tasksRef = db.collection('users').doc(userId).collection('tasks');
       const snapshot = await tasksRef.where('status', '==', 'active').get();
@@ -91,7 +81,6 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // GET /tasks/:id - Get specific task
     if (method === 'GET' && taskId) {
       const taskDoc = await db.collection('users').doc(userId).collection('tasks').doc(taskId).get();
       
@@ -110,7 +99,6 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // POST /tasks - Create task
     if (method === 'POST') {
       const body = JSON.parse(event.body || '{}');
       const { title, description, dueDate, priority, important, urgent } = body;
@@ -150,7 +138,6 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // PUT /tasks/:id - Update task
     if (method === 'PUT' && taskId) {
       const taskRef = db.collection('users').doc(userId).collection('tasks').doc(taskId);
       const taskDoc = await taskRef.get();
@@ -189,7 +176,6 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // DELETE /tasks/:id - Delete task
     if (method === 'DELETE' && taskId) {
       const permanent = event.queryStringParameters?.permanent === 'true';
       const taskRef = db.collection('users').doc(userId).collection('tasks').doc(taskId);
@@ -223,7 +209,6 @@ exports.handler = async (event, context) => {
       }
     }
 
-    // Method not allowed
     return {
       statusCode: 405,
       headers,

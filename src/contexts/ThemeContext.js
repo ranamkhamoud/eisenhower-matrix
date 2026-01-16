@@ -7,7 +7,6 @@ function getInitialTheme() {
     const saved = localStorage.getItem('tally-theme');
     if (saved === 'light' || saved === 'dark') return saved;
   } catch {
-    // ignore
   }
   if (typeof window !== 'undefined' && window.matchMedia) {
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -24,7 +23,6 @@ export function ThemeProvider({ children }) {
     try {
       localStorage.setItem('tally-theme', theme);
     } catch {
-      // ignore
     }
   }, [theme]);
 

@@ -34,27 +34,32 @@ export default function Quadrant({
   onEditTask, 
   onDeleteTask,
   onArchiveTask,
-  globalFilter 
+  globalFilter,
+  onClearGlobalFilter
 }) {
   const { setNodeRef, isOver } = useDroppable({
     id: id
   });
 
   const config = quadrantConfig[id];
-  const [localTab, setLocalTab] = useState('active'); // 'active' or 'completed'
+  const [localTab, setLocalTab] = useState('active');
   const scrollRef = useRef(null);
   const [canScroll, setCanScroll] = useState(false);
   const [isAtBottom, setIsAtBottom] = useState(true);
 
-  // Use global filter if set, otherwise use local tab
   const activeTab = globalFilter || localTab;
 
-  // Filter tasks by completion status
+  const handleTabClick = (tab) => {
+    if (globalFilter) {
+      onClearGlobalFilter?.();
+    }
+    setLocalTab(tab);
+  };
+
   const activeTasks = tasks.filter(t => !t.done);
   const completedTasks = tasks.filter(t => t.done);
   const displayedTasks = activeTab === 'active' ? activeTasks : completedTasks;
 
-  // Check if content is scrollable
   const checkScroll = useCallback(() => {
     const el = scrollRef.current;
     if (el) {
@@ -91,7 +96,7 @@ export default function Quadrant({
       {/* Tabs */}
       <div className="flex items-center gap-1 mb-1.5 px-0.5">
         <button
-          onClick={() => setLocalTab('active')}
+          onClick={() => handleTabClick('active')}
           className={`
             px-2 py-0.5 text-[10px] sm:text-xs font-medium rounded transition-colors
             ${activeTab === 'active' 
@@ -102,7 +107,7 @@ export default function Quadrant({
           Active {activeTasks.length > 0 && `(${activeTasks.length})`}
         </button>
         <button
-          onClick={() => setLocalTab('completed')}
+          onClick={() => handleTabClick('completed')}
           className={`
             px-2 py-0.5 text-[10px] sm:text-xs font-medium rounded transition-colors
             ${activeTab === 'completed' 

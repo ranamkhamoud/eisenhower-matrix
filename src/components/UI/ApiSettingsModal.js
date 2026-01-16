@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Key, Copy, RefreshCw, Check } from 'lucide-react';
+import { X, Key, Copy, RefreshCw, Check, ExternalLink } from 'lucide-react';
 import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../services/firebase';
 
@@ -12,7 +12,7 @@ function generateApiKey() {
   return key;
 }
 
-export default function ApiSettingsModal({ isOpen, onClose, userId }) {
+export default function ApiSettingsModal({ isOpen, onClose, userId, onOpenDocs }) {
   const [apiKey, setApiKey] = useState('');
   const [loading, setLoading] = useState(true);
   const [regenerating, setRegenerating] = useState(false);
@@ -32,14 +32,11 @@ export default function ApiSettingsModal({ isOpen, onClose, userId }) {
       if (keyDoc.exists()) {
         setApiKey(keyDoc.data().apiKey);
       } else {
-        // Generate initial API key
         const newKey = generateApiKey();
-        // Store in user settings
         await setDoc(doc(db, 'users', userId, 'settings', 'api'), {
           apiKey: newKey,
           createdAt: new Date().toISOString(),
         });
-        // Also store in top-level apiKeys collection for easy lookup
         await setDoc(doc(db, 'apiKeys', newKey), {
           userId: userId,
           createdAt: new Date().toISOString(),
@@ -57,18 +54,15 @@ export default function ApiSettingsModal({ isOpen, onClose, userId }) {
     
     setRegenerating(true);
     try {
-      // Delete old API key from apiKeys collection
       if (apiKey) {
         await deleteDoc(doc(db, 'apiKeys', apiKey));
       }
       
       const newKey = generateApiKey();
-      // Store in user settings
       await setDoc(doc(db, 'users', userId, 'settings', 'api'), {
         apiKey: newKey,
         createdAt: new Date().toISOString(),
       });
-      // Also store in top-level apiKeys collection
       await setDoc(doc(db, 'apiKeys', newKey), {
         userId: userId,
         createdAt: new Date().toISOString(),
@@ -164,41 +158,24 @@ export default function ApiSettingsModal({ isOpen, onClose, userId }) {
             Regenerate API Key
           </button>
 
-          {/* API Documentation */}
           <div className="pt-4 border-t border-slate-100 dark:border-white/[0.06]">
-            <h3 className="text-sm font-medium text-slate-700 dark:text-white/80 mb-3">
-              API Endpoints
-            </h3>
-            <div className="space-y-2 text-xs font-mono">
-              <div className="p-2 bg-slate-50 dark:bg-white/[0.04] rounded-lg">
-                <span className="text-green-600 dark:text-green-400">GET</span>
-                <span className="text-slate-600 dark:text-white/70 ml-2">/api/tasks</span>
-              </div>
-              <div className="p-2 bg-slate-50 dark:bg-white/[0.04] rounded-lg">
-                <span className="text-blue-600 dark:text-blue-400">POST</span>
-                <span className="text-slate-600 dark:text-white/70 ml-2">/api/tasks</span>
-              </div>
-              <div className="p-2 bg-slate-50 dark:bg-white/[0.04] rounded-lg">
-                <span className="text-amber-600 dark:text-amber-400">PUT</span>
-                <span className="text-slate-600 dark:text-white/70 ml-2">/api/tasks/:id</span>
-              </div>
-              <div className="p-2 bg-slate-50 dark:bg-white/[0.04] rounded-lg">
-                <span className="text-red-600 dark:text-red-400">DELETE</span>
-                <span className="text-slate-600 dark:text-white/70 ml-2">/api/tasks/:id</span>
-              </div>
-            </div>
-            <p className="mt-3 text-xs text-slate-500 dark:text-white/50">
-              Include your API key in the <code className="px-1 py-0.5 bg-slate-100 dark:bg-white/[0.08] rounded">Authorization</code> header:
-              <br />
-              <code className="block mt-1 p-2 bg-slate-50 dark:bg-white/[0.04] rounded text-slate-600 dark:text-white/70">
-                Authorization: Bearer {'<your-api-key>'}
-              </code>
+            <p className="text-xs text-slate-500 dark:text-white/50 mb-3">
+              Include your API key in the Authorization header:
             </p>
+            <code className="block p-2 bg-slate-50 dark:bg-white/[0.04] rounded text-xs font-mono text-slate-600 dark:text-white/70">
+              Authorization: Bearer {'<your-api-key>'}
+            </code>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="flex justify-end px-5 py-3 bg-slate-50/50 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/[0.06]">
+        <div className="flex justify-between items-center px-5 py-3 bg-slate-50/50 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/[0.06]">
+          <button 
+            onClick={() => { onClose(); onOpenDocs?.(); }}
+            className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-700 dark:text-white/80 hover:text-slate-900 dark:hover:text-white transition-colors"
+          >
+            <ExternalLink className="w-4 h-4" />
+            View Full Docs
+          </button>
           <button 
             onClick={onClose}
             className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-white/60 dark:hover:text-white transition-colors"

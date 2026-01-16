@@ -27,11 +27,11 @@ import Header from '../UI/Header';
 import FeedbackModal from '../UI/FeedbackModal';
 import InfoModal from '../UI/InfoModal';
 import ApiSettingsModal from '../UI/ApiSettingsModal';
+import ApiDocsPage from '../UI/ApiDocsPage';
 import Archive from './Archive';
 import Trash from './Trash';
 import { Plus, Archive as ArchiveIcon, Trash2, ArrowLeft } from 'lucide-react';
 
-// Map quadrant IDs to important/urgent values
 const quadrantMapping = {
   'do-first': { important: true, urgent: true },
   'schedule': { important: true, urgent: false },
@@ -39,7 +39,6 @@ const quadrantMapping = {
   'eliminate': { important: false, urgent: false }
 };
 
-// Get quadrant ID from task properties
 function getQuadrantId(task) {
   if (task.important && task.urgent) return 'do-first';
   if (task.important && !task.urgent) return 'schedule';
@@ -60,6 +59,7 @@ export default function EisenhowerMatrix() {
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [isApiOpen, setIsApiOpen] = useState(false);
+  const [showApiDocs, setShowApiDocs] = useState(false);
   const [globalFilter, setGlobalFilter] = useState(null); // null, 'active', or 'completed'
   const { currentUser } = useAuth();
 
@@ -71,15 +71,12 @@ export default function EisenhowerMatrix() {
     })
   );
 
-  // Global keyboard shortcut: N for new task, ? for info
   const handleGlobalKeyDown = useCallback((e) => {
-    // Close info modal on any key
     if (isInfoOpen) {
       setIsInfoOpen(false);
       return;
     }
     
-    // Don't trigger if modal is open, typing in input, or modifier keys pressed
     if (isModalOpen || isFeedbackOpen) return;
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
     if (e.metaKey || e.ctrlKey || e.altKey) return;
@@ -106,7 +103,6 @@ export default function EisenhowerMatrix() {
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
   }, [handleGlobalKeyDown]);
 
-  // Fetch active tasks from Firestore
   useEffect(() => {
     if (!currentUser) return;
 
@@ -128,7 +124,6 @@ export default function EisenhowerMatrix() {
     return () => unsubscribe();
   }, [currentUser]);
 
-  // Fetch archived tasks
   useEffect(() => {
     if (!currentUser) return;
 
@@ -146,7 +141,6 @@ export default function EisenhowerMatrix() {
     return () => unsubscribe();
   }, [currentUser]);
 
-  // Fetch deleted tasks and auto-delete after 30 days
   useEffect(() => {
     if (!currentUser) return;
 
@@ -159,7 +153,6 @@ export default function EisenhowerMatrix() {
         ...doc.data()
       }));
 
-      // Auto-delete tasks older than 30 days
       const now = new Date();
       tasksData.forEach(task => {
         if (task.deletedAt) {
@@ -183,7 +176,6 @@ export default function EisenhowerMatrix() {
     return () => unsubscribe();
   }, [currentUser]);
 
-  // Add new task
   const handleAddTask = async (taskData) => {
     if (!currentUser) return;
 
@@ -199,7 +191,6 @@ export default function EisenhowerMatrix() {
     }
   };
 
-  // Update task
   const handleUpdateTask = async (taskId, updates) => {
     if (!currentUser) return;
 
@@ -211,7 +202,6 @@ export default function EisenhowerMatrix() {
     }
   };
 
-  // Move task to trash
   const handleDeleteTask = async (taskId) => {
     if (!currentUser) return;
 
@@ -226,7 +216,6 @@ export default function EisenhowerMatrix() {
     }
   };
 
-  // Archive task
   const handleArchiveTask = async (taskId) => {
     if (!currentUser) return;
 
@@ -241,7 +230,6 @@ export default function EisenhowerMatrix() {
     }
   };
 
-  // Restore task from archive or trash
   const handleRestoreTask = async (taskId) => {
     if (!currentUser) return;
 
@@ -257,7 +245,6 @@ export default function EisenhowerMatrix() {
     }
   };
 
-  // Permanently delete task
   const handleDeletePermanently = async (taskId) => {
     if (!currentUser) return;
 
@@ -273,7 +260,6 @@ export default function EisenhowerMatrix() {
     }
   };
 
-  // Empty trash
   const handleEmptyTrash = async () => {
     if (!currentUser) return;
 
@@ -291,7 +277,6 @@ export default function EisenhowerMatrix() {
     }
   };
 
-  // Toggle task done status
   const handleToggleDone = async (taskId) => {
     const task = tasks.find(t => t.id === taskId);
     if (task) {
@@ -299,21 +284,18 @@ export default function EisenhowerMatrix() {
     }
   };
 
-  // Open edit modal
   const handleEditTask = (task) => {
     setEditingTask(task);
     setDefaultQuadrant(null);
     setIsModalOpen(true);
   };
 
-  // Open add modal
   const handleOpenAddModal = () => {
     setEditingTask(null);
     setDefaultQuadrant(null);
     setIsModalOpen(true);
   };
 
-  // Save task from modal
   const handleSaveTask = async (taskData) => {
     if (editingTask) {
       await handleUpdateTask(editingTask.id, taskData);
@@ -329,20 +311,17 @@ export default function EisenhowerMatrix() {
       message,
       category: category || 'general',
       createdAt: serverTimestamp(),
-      // Helpful metadata (keep minimal)
       page: activeTab,
       userEmail: currentUser.email || null,
     });
   };
 
-  // Handle drag start
   const handleDragStart = (event) => {
     const { active } = event;
     const task = tasks.find(t => t.id === active.id);
     setActiveTask(task);
   };
 
-  // Handle drag end
   const handleDragEnd = async (event) => {
     const { active, over } = event;
     setActiveTask(null);
@@ -352,12 +331,10 @@ export default function EisenhowerMatrix() {
     const taskId = active.id;
     const targetQuadrant = over.id;
 
-    // Check if dropped on a quadrant
     if (quadrantMapping[targetQuadrant]) {
       const task = tasks.find(t => t.id === taskId);
       const currentQuadrant = getQuadrantId(task);
 
-      // Only update if dropped in a different quadrant
       if (currentQuadrant !== targetQuadrant) {
         const { important, urgent } = quadrantMapping[targetQuadrant];
         await handleUpdateTask(taskId, { important, urgent });
@@ -365,7 +342,6 @@ export default function EisenhowerMatrix() {
     }
   };
 
-  // Group tasks by quadrant
   const tasksByQuadrant = {
     'do-first': tasks.filter(t => t.important && t.urgent),
     'schedule': tasks.filter(t => t.important && !t.urgent),
@@ -473,6 +449,7 @@ export default function EisenhowerMatrix() {
                           onDeleteTask={handleDeleteTask}
                           onArchiveTask={handleArchiveTask}
                           globalFilter={globalFilter}
+                          onClearGlobalFilter={() => setGlobalFilter(null)}
                         />
                         <Quadrant
                           id="schedule"
@@ -482,6 +459,7 @@ export default function EisenhowerMatrix() {
                           onDeleteTask={handleDeleteTask}
                           onArchiveTask={handleArchiveTask}
                           globalFilter={globalFilter}
+                          onClearGlobalFilter={() => setGlobalFilter(null)}
                         />
                         <Quadrant
                           id="delegate"
@@ -491,6 +469,7 @@ export default function EisenhowerMatrix() {
                           onDeleteTask={handleDeleteTask}
                           onArchiveTask={handleArchiveTask}
                           globalFilter={globalFilter}
+                          onClearGlobalFilter={() => setGlobalFilter(null)}
                         />
                         <Quadrant
                           id="eliminate"
@@ -500,6 +479,7 @@ export default function EisenhowerMatrix() {
                           onDeleteTask={handleDeleteTask}
                           onArchiveTask={handleArchiveTask}
                           globalFilter={globalFilter}
+                          onClearGlobalFilter={() => setGlobalFilter(null)}
                         />
                       </div>
                     </div>
@@ -580,7 +560,14 @@ export default function EisenhowerMatrix() {
         isOpen={isApiOpen}
         onClose={() => setIsApiOpen(false)}
         userId={currentUser?.uid}
+        onOpenDocs={() => setShowApiDocs(true)}
       />
+
+      {showApiDocs && (
+        <div className="fixed inset-0 z-[60] bg-white dark:bg-[#1a1a1a] overflow-y-auto">
+          <ApiDocsPage onBack={() => setShowApiDocs(false)} />
+        </div>
+      )}
     </div>
   );
 }
