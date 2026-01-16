@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   DndContext, 
   DragOverlay,
@@ -25,6 +25,8 @@ import TaskCard from './TaskCard';
 import TaskModal from './TaskModal';
 import Header from '../UI/Header';
 import FeedbackModal from '../UI/FeedbackModal';
+import InfoModal from '../UI/InfoModal';
+import ApiSettingsModal from '../UI/ApiSettingsModal';
 import Archive from './Archive';
 import Trash from './Trash';
 import { Plus, Archive as ArchiveIcon, Trash2, ArrowLeft } from 'lucide-react';
@@ -56,6 +58,9 @@ export default function EisenhowerMatrix() {
   const [defaultQuadrant, setDefaultQuadrant] = useState(null);
   const [activeTab, setActiveTab] = useState('matrix');
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const [isApiOpen, setIsApiOpen] = useState(false);
+  const [globalFilter, setGlobalFilter] = useState(null); // null, 'active', or 'completed'
   const { currentUser } = useAuth();
 
   const sensors = useSensors(
@@ -65,6 +70,41 @@ export default function EisenhowerMatrix() {
       },
     })
   );
+
+  // Global keyboard shortcut: N for new task, ? for info
+  const handleGlobalKeyDown = useCallback((e) => {
+    // Close info modal on any key
+    if (isInfoOpen) {
+      setIsInfoOpen(false);
+      return;
+    }
+    
+    // Don't trigger if modal is open, typing in input, or modifier keys pressed
+    if (isModalOpen || isFeedbackOpen) return;
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    
+    if (e.key === 'n' || e.key === 'N') {
+      e.preventDefault();
+      setEditingTask(null);
+      setDefaultQuadrant(null);
+      setIsModalOpen(true);
+    } else if (e.key === '?') {
+      e.preventDefault();
+      setIsInfoOpen(true);
+    } else if (e.key === 'a' || e.key === 'A') {
+      e.preventDefault();
+      setGlobalFilter(prev => prev === 'active' ? null : 'active');
+    } else if (e.key === 'd' || e.key === 'D') {
+      e.preventDefault();
+      setGlobalFilter(prev => prev === 'completed' ? null : 'completed');
+    }
+  }, [isModalOpen, isFeedbackOpen, isInfoOpen]);
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, [handleGlobalKeyDown]);
 
   // Fetch active tasks from Firestore
   useEffect(() => {
@@ -342,8 +382,12 @@ export default function EisenhowerMatrix() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-white text-slate-900 dark:bg-[#1a1a1a] dark:text-white">
-      <Header onOpenFeedback={() => setIsFeedbackOpen(true)} />
+    <div className="h-screen overflow-hidden flex flex-col bg-white text-slate-900 dark:bg-[#1a1a1a] dark:text-white">
+      <Header 
+        onOpenFeedback={() => setIsFeedbackOpen(true)} 
+        onOpenInfo={() => setIsInfoOpen(true)}
+        onOpenApi={() => setIsApiOpen(true)}
+      />
 
       {activeTab !== 'matrix' && (
         <button
@@ -379,17 +423,17 @@ export default function EisenhowerMatrix() {
         )}
 
         {activeTab === 'matrix' && (
-          <div className="h-full">
-            <div className="mx-auto h-full w-full px-4 sm:px-6 pt-16 sm:pt-14 pb-6">
+          <div className="h-full min-h-0 overflow-hidden flex flex-col">
+            <div className="flex-1 min-h-0 mx-auto w-full px-4 sm:px-6 pt-16 sm:pt-14 pb-16 sm:pb-20 flex flex-col">
               <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
                 onDragStart={handleDragStart}
                 onDragEnd={handleDragEnd}
               >
-                {/* Matrix canvas (matches reference screenshot) */}
-                <div className="mx-auto w-full max-w-6xl h-[70vh] sm:h-[72vh] md:h-[76vh] min-h-[360px] sm:min-h-[420px]">
-                  <div className="grid grid-cols-[48px,1fr] sm:grid-cols-[64px,1fr] md:grid-cols-[72px,1fr] grid-rows-[44px,1fr] sm:grid-rows-[56px,1fr] md:grid-rows-[64px,1fr] h-full gap-x-3 gap-y-3 sm:gap-x-5 sm:gap-y-5 md:gap-x-6 md:gap-y-6">
+                {/* Matrix canvas - fixed size, quadrants scroll internally */}
+                <div className="mx-auto w-full max-w-6xl flex-1 min-h-0 overflow-hidden flex flex-col">
+                  <div className="grid grid-cols-[48px,1fr] sm:grid-cols-[64px,1fr] md:grid-cols-[72px,1fr] grid-rows-[44px,1fr] sm:grid-rows-[56px,1fr] md:grid-rows-[64px,1fr] flex-1 min-h-0 gap-x-3 gap-y-3 sm:gap-x-5 sm:gap-y-5 md:gap-x-6 md:gap-y-6">
                     {/* top-left spacer */}
                     <div />
 
@@ -414,13 +458,13 @@ export default function EisenhowerMatrix() {
                     </div>
 
                     {/* Quadrants + crosshair lines */}
-                    <div className="relative h-full">
-                      <div className="absolute inset-0 pointer-events-none">
+                    <div className="relative h-full min-h-0 overflow-hidden">
+                      <div className="absolute inset-0 pointer-events-none z-10">
                         <div className="absolute left-1/2 top-0 bottom-0 w-px bg-slate-900/30 dark:bg-white/30" />
                         <div className="absolute top-1/2 left-0 right-0 h-px bg-slate-900/30 dark:bg-white/30" />
                       </div>
 
-                      <div className="grid grid-cols-2 grid-rows-2 h-full">
+                      <div className="grid grid-cols-2 grid-rows-2 h-full min-h-0">
                         <Quadrant
                           id="do-first"
                           tasks={tasksByQuadrant['do-first']}
@@ -428,6 +472,7 @@ export default function EisenhowerMatrix() {
                           onEditTask={handleEditTask}
                           onDeleteTask={handleDeleteTask}
                           onArchiveTask={handleArchiveTask}
+                          globalFilter={globalFilter}
                         />
                         <Quadrant
                           id="schedule"
@@ -436,6 +481,7 @@ export default function EisenhowerMatrix() {
                           onEditTask={handleEditTask}
                           onDeleteTask={handleDeleteTask}
                           onArchiveTask={handleArchiveTask}
+                          globalFilter={globalFilter}
                         />
                         <Quadrant
                           id="delegate"
@@ -444,6 +490,7 @@ export default function EisenhowerMatrix() {
                           onEditTask={handleEditTask}
                           onDeleteTask={handleDeleteTask}
                           onArchiveTask={handleArchiveTask}
+                          globalFilter={globalFilter}
                         />
                         <Quadrant
                           id="eliminate"
@@ -452,6 +499,7 @@ export default function EisenhowerMatrix() {
                           onEditTask={handleEditTask}
                           onDeleteTask={handleDeleteTask}
                           onArchiveTask={handleArchiveTask}
+                          globalFilter={globalFilter}
                         />
                       </div>
                     </div>
@@ -521,6 +569,17 @@ export default function EisenhowerMatrix() {
         onClose={() => setIsFeedbackOpen(false)}
         onSubmit={handleSubmitFeedback}
         userEmail={currentUser?.email}
+      />
+
+      <InfoModal
+        isOpen={isInfoOpen}
+        onClose={() => setIsInfoOpen(false)}
+      />
+
+      <ApiSettingsModal
+        isOpen={isApiOpen}
+        onClose={() => setIsApiOpen(false)}
+        userId={currentUser?.uid}
       />
     </div>
   );

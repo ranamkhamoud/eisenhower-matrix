@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { X } from 'lucide-react';
 
 export default function TaskModal({ isOpen, onClose, onSave, task, defaultQuadrant }) {
@@ -47,6 +47,32 @@ export default function TaskModal({ isOpen, onClose, onSave, task, defaultQuadra
     }
   }, [task, defaultQuadrant, isOpen]);
 
+  // Keyboard shortcuts: Cmd+U for urgent, Cmd+I for important (works even in inputs)
+  const handleKeyDown = useCallback((e) => {
+    if (e.key === 'Escape') {
+      onClose();
+      return;
+    }
+    
+    // Cmd+U for urgent, Cmd+I for important (works anywhere in modal)
+    if (e.metaKey || e.ctrlKey) {
+      if (e.key === 'u' || e.key === 'U') {
+        e.preventDefault();
+        setFormData(prev => ({ ...prev, urgent: !prev.urgent }));
+      } else if (e.key === 'i' || e.key === 'I') {
+        e.preventDefault();
+        setFormData(prev => ({ ...prev, important: !prev.important }));
+      }
+    }
+  }, [onClose]);
+
+  useEffect(() => {
+    if (isOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [isOpen, handleKeyDown]);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
@@ -71,7 +97,7 @@ export default function TaskModal({ isOpen, onClose, onSave, task, defaultQuadra
 
   return (
     <div 
-      className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center p-4 z-50" 
+      className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50" 
       onClick={onClose}
     >
       <div 

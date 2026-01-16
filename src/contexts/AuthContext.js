@@ -4,7 +4,7 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
-  GoogleAuthProvider,
+  GithubAuthProvider,
   signInWithPopup
 } from 'firebase/auth';
 import { auth } from '../services/firebase';
@@ -27,8 +27,8 @@ export function AuthProvider({ children }) {
     return signInWithEmailAndPassword(auth, email, password);
   }
 
-  function loginWithGoogle() {
-    const provider = new GoogleAuthProvider();
+  function loginWithGithub() {
+    const provider = new GithubAuthProvider();
     return signInWithPopup(auth, provider);
   }
 
@@ -49,7 +49,7 @@ export function AuthProvider({ children }) {
     currentUser,
     signup,
     login,
-    loginWithGoogle,
+    loginWithGithub,
     logout
   };
 
