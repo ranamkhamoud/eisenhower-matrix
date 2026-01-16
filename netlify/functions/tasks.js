@@ -37,13 +37,24 @@ async function authenticateApiKey(authHeader) {
     const usersRef = db.collection('users');
     const usersSnapshot = await usersRef.get();
     
+    console.log(`Found ${usersSnapshot.docs.length} users to check`);
+    
     for (const userDoc of usersSnapshot.docs) {
       const settingsDoc = await db.doc(`users/${userDoc.id}/settings/api`).get();
-      if (settingsDoc.exists && settingsDoc.data().apiKey === apiKey) {
-        return { userId: userDoc.id };
+      console.log(`User ${userDoc.id}: settings exists = ${settingsDoc.exists}`);
+      
+      if (settingsDoc.exists) {
+        const storedKey = settingsDoc.data().apiKey;
+        console.log(`Comparing keys: stored=${storedKey?.substring(0,10)}... input=${apiKey?.substring(0,10)}...`);
+        
+        if (storedKey === apiKey) {
+          console.log(`API key matched for user ${userDoc.id}`);
+          return { userId: userDoc.id };
+        }
       }
     }
 
+    console.log('No matching API key found');
     return { error: 'Invalid API key', status: 401 };
   } catch (error) {
     console.error('Auth error:', error);
