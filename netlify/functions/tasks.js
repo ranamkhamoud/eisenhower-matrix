@@ -67,10 +67,28 @@ exports.handler = async (event, context) => {
   try {
     if (method === 'GET' && !taskId) {
       const params = event.queryStringParameters || {};
-      const sort = params.sort || 'date_desc';
+      const orderBy = params.order_by || 'created_at';
+      const orderDir = params.order_dir || 'desc';
       const search = params.q?.toLowerCase().trim();
       const quadrant = params.quadrant;
       const status = params.status || 'active';
+      
+      let limit = null;
+      let offset = 0;
+      
+      if (params.limit) {
+        limit = Math.min(Math.max(parseInt(params.limit) || 50, 1), 100);
+        if (params.offset) {
+          offset = Math.max(parseInt(params.offset) || 0, 0);
+        } else if (params.page) {
+          const page = Math.max(parseInt(params.page) || 1, 1);
+          offset = (page - 1) * limit;
+        }
+      } else if (params.size) {
+        limit = Math.min(Math.max(parseInt(params.size) || 50, 1), 100);
+        const page = Math.max(parseInt(params.page) || 1, 1);
+        offset = (page - 1) * limit;
+      }
 
       const tasksRef = db.collection('users').doc(userId).collection('tasks');
       let query = tasksRef;
@@ -83,32 +101,32 @@ exports.handler = async (event, context) => {
         query = query.where('status', '==', status);
       }
 
-      if (quadrant) {
-        const quadrantMap = {
-          'do-first': { important: true, urgent: true },
-          'schedule': { important: true, urgent: false },
-          'delegate': { important: false, urgent: true },
-          'eliminate': { important: false, urgent: false },
-        };
-        if (quadrantMap[quadrant]) {
-          query = query
-            .where('important', '==', quadrantMap[quadrant].important)
-            .where('urgent', '==', quadrantMap[quadrant].urgent);
-        }
+      const quadrantMap = {
+        'UI': { important: true, urgent: true },
+        'NUI': { important: true, urgent: false },
+        'UNI': { important: false, urgent: true },
+        'NUNI': { important: false, urgent: false },
+      };
+
+      if (quadrant && quadrantMap[quadrant.toUpperCase()]) {
+        const q = quadrantMap[quadrant.toUpperCase()];
+        query = query
+          .where('important', '==', q.important)
+          .where('urgent', '==', q.urgent);
       }
 
       const snapshot = await query.get();
       
       let tasks = snapshot.docs.map(doc => {
         const data = doc.data();
-        const quadrantName = data.important && data.urgent ? 'do-first'
-          : data.important && !data.urgent ? 'schedule'
-          : !data.important && data.urgent ? 'delegate'
-          : 'eliminate';
+        const quadrantCode = data.urgent && data.important ? 'UI'
+          : !data.urgent && data.important ? 'NUI'
+          : data.urgent && !data.important ? 'UNI'
+          : 'NUNI';
         return {
           id: doc.id,
           ...data,
-          quadrant: quadrantName,
+          quadrant: quadrantCode,
           createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt,
           updatedAt: data.updatedAt?.toDate?.()?.toISOString() || data.updatedAt,
         };
@@ -121,30 +139,56 @@ exports.handler = async (event, context) => {
         );
       }
 
-      const quadrantOrder = { 'do-first': 0, 'schedule': 1, 'delegate': 2, 'eliminate': 3 };
+      const quadrantOrder = { 'UI': 0, 'NUI': 1, 'UNI': 2, 'NUNI': 3 };
+      const isDesc = orderDir === 'desc';
       
       tasks.sort((a, b) => {
-        switch (sort) {
-          case 'date':
-            return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
-          case 'date_desc':
-            return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
-          case 'due':
-            if (!a.dueDate && !b.dueDate) return 0;
-            if (!a.dueDate) return 1;
-            if (!b.dueDate) return -1;
-            return new Date(a.dueDate) - new Date(b.dueDate);
+        let result = 0;
+        switch (orderBy) {
+          case 'created_at':
+            result = new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
+            break;
+          case 'updated_at':
+            result = new Date(a.updatedAt || 0) - new Date(b.updatedAt || 0);
+            break;
+          case 'due_date':
+            if (!a.dueDate && !b.dueDate) result = 0;
+            else if (!a.dueDate) result = 1;
+            else if (!b.dueDate) result = -1;
+            else result = new Date(a.dueDate) - new Date(b.dueDate);
+            break;
           case 'quadrant':
-            return quadrantOrder[a.quadrant] - quadrantOrder[b.quadrant];
+            result = quadrantOrder[a.quadrant] - quadrantOrder[b.quadrant];
+            break;
+          case 'title':
+            result = (a.title || '').localeCompare(b.title || '');
+            break;
           default:
-            return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+            result = new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
         }
+        return isDesc ? -result : result;
       });
+
+      const total = tasks.length;
+      
+      if (limit) {
+        tasks = tasks.slice(offset, offset + limit);
+      }
+
+      const response = { tasks, total };
+      
+      if (limit) {
+        response.pagination = {
+          limit,
+          offset,
+          returned: tasks.length,
+        };
+      }
 
       return {
         statusCode: 200,
         headers,
-        body: JSON.stringify({ tasks, count: tasks.length }),
+        body: JSON.stringify(response),
       };
     }
 

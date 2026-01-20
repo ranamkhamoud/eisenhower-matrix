@@ -66,10 +66,12 @@ export default function EisenhowerMatrix() {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8,
+        distance: 5,
       },
     })
   );
+
+  const dropAnimation = null;
 
   const handleGlobalKeyDown = useCallback((e) => {
     if (isInfoOpen) {
@@ -486,15 +488,17 @@ export default function EisenhowerMatrix() {
                   </div>
                 </div>
 
-                <DragOverlay>
+                <DragOverlay dropAnimation={dropAnimation}>
                   {activeTask ? (
-                    <TaskCard
-                      task={activeTask}
-                      onToggleDone={() => {}}
-                      onEdit={() => {}}
-                      onArchive={() => {}}
-                      onDelete={() => {}}
-                    />
+                    <div className="shadow-xl rounded-lg">
+                      <TaskCard
+                        task={activeTask}
+                        onToggleDone={() => {}}
+                        onEdit={() => {}}
+                        onArchive={() => {}}
+                        onDelete={() => {}}
+                      />
+                    </div>
                   ) : null}
                 </DragOverlay>
               </DndContext>

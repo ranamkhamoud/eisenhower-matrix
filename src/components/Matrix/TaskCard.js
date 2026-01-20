@@ -15,7 +15,7 @@ export default function TaskCard({ task, onToggleDone, onEdit, onDelete, onArchi
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition
+    transition,
   };
 
   const formatDate = (dateString) => {
@@ -54,8 +54,8 @@ export default function TaskCard({ task, onToggleDone, onEdit, onDelete, onArchi
         transition-all duration-150
         hover:bg-slate-100/80 dark:hover:bg-white/[0.07]
         hover:border-slate-300/60 dark:hover:border-white/[0.10]
-        ${isDragging ? 'opacity-50 shadow-lg scale-[1.02]' : ''}
-        ${task.done ? 'opacity-50' : ''}
+        ${isDragging ? 'opacity-30' : ''}
+        ${task.done && !isDragging ? 'opacity-50' : ''}
       `}
     >
       {/* Title row */}

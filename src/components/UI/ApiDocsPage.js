@@ -6,30 +6,38 @@ const endpoints = [
   {
     method: 'GET',
     path: '/api/tasks',
-    description: 'List tasks with sorting and search',
+    description: 'List tasks with pagination, sorting, and search',
     queryParams: {
-      sort: '"date" | "date_desc" | "due" | "quadrant"',
+      order_by: '"created_at" | "updated_at" | "due_date" | "quadrant" | "title"',
+      order_dir: '"asc" | "desc" (default: desc)',
+      limit: 'number (1-100, enables pagination)',
+      offset: 'number (use with limit)',
+      page: 'number (use with limit or size)',
+      size: 'number (1-100, alternative to limit)',
       q: 'string (search in title/description)',
-      quadrant: '"do-first" | "schedule" | "delegate" | "eliminate"',
+      quadrant: '"UI" | "NUI" | "UNI" | "NUNI"',
       status: '"active" | "done" | "archived" | "deleted"',
     },
     example: {
-      request: `curl -X GET "https://tallytasks.netlify.app/api/tasks?sort=quadrant&q=meeting" \\
+      request: `curl -X GET "https://tallytasks.netlify.app/api/tasks?order_by=quadrant&limit=10&page=1" \\
   -H "Authorization: Bearer YOUR_API_KEY"`,
       response: `{
   "tasks": [
     {
       "id": "abc123",
       "title": "Team meeting",
-      "description": "Weekly sync",
       "important": true,
       "urgent": true,
-      "done": false,
-      "quadrant": "do-first",
+      "quadrant": "UI",
       "createdAt": "2026-01-20T10:00:00.000Z"
     }
   ],
-  "count": 1
+  "total": 25,
+  "pagination": {
+    "limit": 10,
+    "offset": 0,
+    "returned": 10
+  }
 }`
     }
   },
@@ -196,6 +204,27 @@ export default function ApiDocsPage({ onBack }) {
         <div className="mb-8 p-4 bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] rounded-lg">
           <h2 className="text-lg font-semibold mb-2">Base URL</h2>
           <CodeBlock code="https://tallytasks.netlify.app" />
+        </div>
+
+        <div className="mb-8 p-4 bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] rounded-lg">
+          <h2 className="text-lg font-semibold mb-2">Quadrant</h2>
+          <p className="text-sm text-slate-600 dark:text-white/70 mb-3">
+            Tasks are organized by urgency (U) and importance (I):
+          </p>
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <div className="p-2 bg-white dark:bg-white/[0.04] rounded border border-slate-200 dark:border-white/[0.08]">
+              <span className="font-mono font-bold">UI</span> - Urgent + Important
+            </div>
+            <div className="p-2 bg-white dark:bg-white/[0.04] rounded border border-slate-200 dark:border-white/[0.08]">
+              <span className="font-mono font-bold">NUI</span> - Not Urgent + Important
+            </div>
+            <div className="p-2 bg-white dark:bg-white/[0.04] rounded border border-slate-200 dark:border-white/[0.08]">
+              <span className="font-mono font-bold">UNI</span> - Urgent + Not Important
+            </div>
+            <div className="p-2 bg-white dark:bg-white/[0.04] rounded border border-slate-200 dark:border-white/[0.08]">
+              <span className="font-mono font-bold">NUNI</span> - Not Urgent + Not Important
+            </div>
+          </div>
         </div>
 
         <h2 className="text-2xl font-bold mb-4">Endpoints</h2>
