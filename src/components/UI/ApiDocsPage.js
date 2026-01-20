@@ -6,22 +6,27 @@ const endpoints = [
   {
     method: 'GET',
     path: '/api/tasks',
-    description: 'List all active tasks',
+    description: 'List tasks with sorting and search',
+    queryParams: {
+      sort: '"date" | "date_desc" | "due" | "quadrant"',
+      q: 'string (search in title/description)',
+      quadrant: '"do-first" | "schedule" | "delegate" | "eliminate"',
+      status: '"active" | "done" | "archived" | "deleted"',
+    },
     example: {
-      request: `curl -X GET "https://tallytasks.netlify.app/api/tasks" \\
+      request: `curl -X GET "https://tallytasks.netlify.app/api/tasks?sort=quadrant&q=meeting" \\
   -H "Authorization: Bearer YOUR_API_KEY"`,
       response: `{
   "tasks": [
     {
       "id": "abc123",
-      "title": "My Task",
-      "description": "Task description",
+      "title": "Team meeting",
+      "description": "Weekly sync",
       "important": true,
-      "urgent": false,
+      "urgent": true,
       "done": false,
-      "priority": "high",
-      "dueDate": "2026-01-20",
-      "status": "active"
+      "quadrant": "do-first",
+      "createdAt": "2026-01-20T10:00:00.000Z"
     }
   ],
   "count": 1
@@ -212,6 +217,24 @@ export default function ApiDocsPage({ onBack }) {
               </div>
 
               <div className="p-4 space-y-4">
+                {endpoint.queryParams && (
+                  <div>
+                    <div className="text-xs font-medium text-slate-500 dark:text-white/50 mb-2">Query Parameters</div>
+                    <div className="bg-slate-50 dark:bg-white/[0.04] rounded-lg p-3">
+                      <table className="w-full text-sm">
+                        <tbody>
+                          {Object.entries(endpoint.queryParams).map(([key, value]) => (
+                            <tr key={key} className="border-b border-slate-200 dark:border-white/[0.06] last:border-0">
+                              <td className="py-1.5 font-mono text-slate-700 dark:text-white/80">{key}</td>
+                              <td className="py-1.5 text-slate-500 dark:text-white/50">{value}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
                 {endpoint.body && (
                   <div>
                     <div className="text-xs font-medium text-slate-500 dark:text-white/50 mb-2">Request Body</div>
